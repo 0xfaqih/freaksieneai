@@ -54,7 +54,7 @@ async function getUserInfo(userId) {
     );
     return response.data;
   } catch (error) {
-    logger.error("Error fetching user info:", error);
+    console.error(error.response.data.error);
     return null;
   }
 }
@@ -68,7 +68,7 @@ async function getAgent(userId, authToken) {
     });
     return response.data;
   } catch (error) {
-    logger.error("Error fetching agent info:", error);
+    console.error(error.response.data.error);
     return null;
   }
 }
@@ -91,7 +91,9 @@ async function joinSpace(userId, agentId, entryFees, authToken) {
     );
     return response.data;
   } catch (error) {
-    logger.error("Error joining space:", error);
+    if (error.response) {
+      console.error(error.response.data.error);
+    }
     return null;
   }
 }
@@ -103,7 +105,7 @@ async function checkMatching(matchmakingId) {
     );
     return response.data;
   } catch (error) {
-    logger.error("Error checking matching:", error);
+    console.error(error.response.data.error);
     return null;
   }
 }

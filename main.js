@@ -41,17 +41,14 @@ async function processAgent(account, agent) {
       account.authToken
     );
 
-    if (!battle || battle.error) {
+    if (battle === null) {
       logger.error(`Error joining space: ${battle?.error || "Unknown error"}`);
-      if (battle?.error) {
-        logger.warn(`Error detail: ${battle.error}`);
-      }
       logger.custom(`--------------------------------`);
       await delay(CONFIG.DELAY);
       return;
     }
 
-    logger.info(`${agent.name} Joining Space with ${generateRandomFee}ETH`);
+    logger.info(`${agent.id} Joining Space with ${generateRandomFee}ETH`);
     logger.success(`${agent.name} Joined Space with ${generateRandomFee}ETH`);
 
     let checkBattle = await checkMatching(battle.matchmakingId);
