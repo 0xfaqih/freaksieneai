@@ -15,9 +15,9 @@ const CONFIG = {
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-async function handleBattle(account, agent, battle) {
-  logger.info(`${agent.id} Joining Space with ${battle.entryFees}ETH`);
-  logger.success(`${agent.name} Joined Space with ${battle.entryFees}ETH`);
+async function handleBattle(account, agent, battle, entryFees) {
+  logger.info(`${agent.id} Joining Space with ${entryFees}ETH`);
+  logger.success(`${agent.name} Joined Space with ${entryFees}ETH`);
 
   let checkBattle = await checkMatching(battle.matchmakingId);
   const startTime = Date.now();
@@ -81,7 +81,7 @@ async function processAgent(account, agent) {
       return;
     }
 
-    await handleBattle(account, agent, battle);
+    await handleBattle(account, agent, battle, entryFees);
   }
 }
 
