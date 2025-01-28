@@ -1,6 +1,7 @@
 import axios from "axios";
 import axiosRetry from "axios-retry";
 import logger from "./logger.js";
+import { ethers } from "ethers";
 
 const BASE_URL = "https://dapp-backend-large.fractionai.xyz";
 
@@ -110,4 +111,40 @@ async function checkMatching(matchmakingId) {
   }
 }
 
-export { getUserInfo, getAgent, joinSpace, checkMatching };
+async function getNonce() {
+  try {
+    const response = await axiosInstance.get(`/api3/auth/nonce`);
+    return response.data;
+  } catch (error) {
+    logger.error("Error getting nonce:", error);
+    return null;
+  }
+}
+
+async function verifySignature(walletAddress, message, signature) {
+  try {
+    const response = await axiosInstance.post(`/api3/auth/verify`, {
+      message,
+      signature,
+      referralCode: null,
+    });
+    return response.data;
+  } catch (error) {
+    logger.error("Error verifying signature:", error);
+    return null;
+  }
+}
+
+async function refreshAuthToken(walletAddress, privateKey) {
+  const nonceData = await getNonce();
+  if (!nonceData) return null;
+
+  const message = `dapp.fractionai.xyz wants you to sign in with your Ethereum account:\n${walletAddress}\n\nSign in with your wallet to Fraction AI.\n\nURI: https://dapp.fractionai.xyz\nVersion: 1\nChain ID: 11155111\nNonce: ${nonceData.nonce}\nIssued At: ${new Date().toISOString()}`;
+  const wallet = new ethers.Wallet(privateKey);
+  const signature = await wallet.signMessage(message);
+
+  const authData = await verifySignature(walletAddress, message, signature);
+  return authData;
+}
+
+export { getUserInfo, getAgent, joinSpace, checkMatching, refreshAuthToken };
