@@ -1,11 +1,17 @@
-import { promises as fs } from "fs";
-import { getUserInfo, getAgent, joinSpace, checkMatching, refreshAuthToken } from "./config/api.js";
+import {
+  getUserInfo,
+  getAgent,
+  joinSpace,
+  checkMatching,
+  refreshAuthToken,
+} from "./config/api.js";
 import { ethers } from "ethers";
 import logger from "./config/logger.js";
 
 const CONFIG = {
   ENTRY_FEE: [
-    0.001, 0.001, 0.001, 0.001, 0.001, 0.01, 0.01, 0.01, 0,1
+    0.001, 0.001, 0.001, 0.001, 0.001, 0.01, 0.001, 0.01, 0.001, 0.01, 0.001,
+    0.1, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001, 0.001,
   ],
   DELAY: 15000,
   TIMEOUT: 600000, // 10 minutes
@@ -23,7 +29,9 @@ async function handleBattle(account, agent, battle, entryFees) {
 
   while (checkBattle.matchmakingStatus === "QUEUED") {
     if (Date.now() - startTime > CONFIG.TIMEOUT) {
-      logger.error("Match did not start within 10 minutes. Moving to next account.");
+      logger.error(
+        "Match did not start within 10 minutes. Moving to next account."
+      );
       return;
     }
 
@@ -33,13 +41,18 @@ async function handleBattle(account, agent, battle, entryFees) {
     checkBattle = await checkMatching(battle.matchmakingId);
   }
 
-  if (checkBattle.matchmakingStatus === "COMPLETED" || checkBattle.status === "ON_PROGRESS") {
+  if (
+    checkBattle.matchmakingStatus === "COMPLETED" ||
+    checkBattle.status === "ON_PROGRESS"
+  ) {
     logger.success(`Match started!`);
   }
 
   while (checkBattle.session.status !== "COMPLETED") {
     if (Date.now() - startTime > CONFIG.TIMEOUT) {
-      logger.error("Match did not complete within 10 minutes. Moving to next account.");
+      logger.error(
+        "Match did not complete within 10 minutes. Moving to next account."
+      );
       return;
     }
 
@@ -52,7 +65,9 @@ async function handleBattle(account, agent, battle, entryFees) {
   logger.success(`Rewards distributed and match completed!`);
   await delay(CONFIG.DELAY);
 
-  const participant = checkBattle.participants.find((p) => p.agent === agent.id);
+  const participant = checkBattle.participants.find(
+    (p) => p.agent === agent.id
+  );
 
   if (participant) {
     logger.success("--------------------------------");
@@ -70,8 +85,14 @@ async function handleBattle(account, agent, battle, entryFees) {
 
 async function processAgent(account, agent) {
   if (!agent.automationEnabled) {
-    const entryFees = CONFIG.ENTRY_FEE[Math.floor(Math.random() * CONFIG.ENTRY_FEE.length)];
-    const battle = await joinSpace(account.userId, agent.id, entryFees, account.authToken);
+    const entryFees =
+      CONFIG.ENTRY_FEE[Math.floor(Math.random() * CONFIG.ENTRY_FEE.length)];
+    const battle = await joinSpace(
+      account.userId,
+      agent.id,
+      entryFees,
+      account.authToken
+    );
 
     if (battle === null) {
       logger.error(`Error joining space: ${battle?.error || "Unknown error"}`);
@@ -110,7 +131,10 @@ async function processAccount(account) {
   } catch (error) {
     if (error.response && error.response.status === 401) {
       logger.error(`Auth token expired for ${account.userId}, refreshing...`);
-      const authData = await refreshAuthToken(account.walletAddress, account.privateKey);
+      const authData = await refreshAuthToken(
+        account.walletAddress,
+        account.privateKey
+      );
       if (authData) {
         account.authToken = authData.accessToken;
         account.userId = authData.user.id;
@@ -162,7 +186,9 @@ async function main() {
       await processAccount(account);
     }
 
-    logger.info(`Cooldown for ${CONFIG.COOLDOWN / 60000} minutes before restarting...`);
+    logger.info(
+      `Cooldown for ${CONFIG.COOLDOWN / 60000} minutes before restarting...`
+    );
     await delay(CONFIG.COOLDOWN);
   }
 }
