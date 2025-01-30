@@ -96,8 +96,16 @@ async function processAgent(account, agent) {
 
     if (battle === null) {
       logger.error(`Error joining space: ${battle?.error || "Unknown error"}`);
-      logger.custom(`--------------------------------`);
-      await delay(CONFIG.DELAY);
+      if (battle?.error?.includes("User has reached maximum number of sessions")) {
+        const now = new Date();
+        const nextHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1, 1, 0, 0);
+        const delayMs = nextHour - now;
+        logger.custom(`User has reached maximum number of sessions. Retrying at ${nextHour.toLocaleTimeString()}`);
+        await delay(delayMs);
+      } else {
+        logger.custom(`--------------------------------`);
+        await delay(CONFIG.DELAY);
+      }
       return;
     }
 
