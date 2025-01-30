@@ -130,7 +130,7 @@ async function processAccount(account) {
     }
   } catch (error) {
     if (error.response && error.response.status === 401) {
-      logger.error(`Auth token expired for ${account.userId}, refreshing...`);
+      logger.error(`Auth token expired or invalid for ${account.userId}, refreshing...`);
       const authData = await refreshAuthToken(
         account.walletAddress,
         account.privateKey
@@ -138,7 +138,7 @@ async function processAccount(account) {
       if (authData) {
         account.authToken = authData.accessToken;
         account.userId = authData.user.id;
-        logger.info(`Access token regenerated for ${account.authToken}`);
+        logger.info(`Access token regenerated for ${account.userId}`);
         await processAccount(account);
       } else {
         logger.error(`Failed to refresh auth token for ${account.userId}`);

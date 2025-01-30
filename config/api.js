@@ -55,6 +55,9 @@ async function getUserInfo(userId) {
     );
     return response.data;
   } catch (error) {
+    if (error.response && error.response.status === 401) {
+      throw new Error("Invalid or expired token");
+    }
     console.error(error.response.data.error);
     return null;
   }
@@ -69,6 +72,9 @@ async function getAgent(userId, authToken) {
     });
     return response.data;
   } catch (error) {
+    if (error.response && error.response.status === 401) {
+      throw new Error("Invalid or expired token");
+    }
     console.error(error.response.data.error);
     return null;
   }
@@ -92,6 +98,9 @@ async function joinSpace(userId, agentId, entryFees, authToken) {
     );
     return response.data;
   } catch (error) {
+    if (error.response && error.response.status === 401) {
+      throw new Error("Invalid or expired token");
+    }
     if (error.response) {
       console.error(error.response.data.error);
     }
