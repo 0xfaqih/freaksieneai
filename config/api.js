@@ -102,7 +102,7 @@ async function joinSpace(userId, agentId, entryFees, authToken) {
       throw new Error("Invalid or expired token");
     }
     if (error.response) {
-      console.error(error.response.data.error);
+      throw new Error(error.response.data.error || "Unknown error");
     }
     return null;
   }

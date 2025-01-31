@@ -87,30 +87,51 @@ async function processAgent(account, agent) {
   if (!agent.automationEnabled) {
     const entryFees =
       CONFIG.ENTRY_FEE[Math.floor(Math.random() * CONFIG.ENTRY_FEE.length)];
-    const battle = await joinSpace(
-      account.userId,
-      agent.id,
-      entryFees,
-      account.authToken
-    );
+    try {
+      const battle = await joinSpace(
+        account.userId,
+        agent.id,
+        entryFees,
+        account.authToken
+      );
 
-    if (battle === null) {
-      logger.error(`Error joining space: ${battle?.error || "Unknown error"}`);
-      if (battle?.error?.includes("User has reached maximum number of sessions")) {
+      if (battle === null) {
+        throw new Error("Unknown error");
+      }
+
+      await handleBattle(account, agent, battle, entryFees);
+    } catch (error) {
+      logger.error(`Error joining space: ${error.message}`);
+      console.error(error);
+      if (
+        error.message.includes(
+          "User has reached maximum number of sessions: \n        6 for the hour,\n        please try after 60 minutes"
+        )
+      ) {
         const now = new Date();
-        const nextHour = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours() + 1, 1, 0, 0);
+        const nextHour = new Date(
+          now.getFullYear(),
+          now.getMonth(),
+          now.getDate(),
+          now.getHours() + 1,
+          1,
+          0,
+          0
+        );
         const delayMs = nextHour - now;
-        logger.custom(`User has reached maximum number of sessions. Retrying at ${nextHour.toLocaleTimeString()}`);
+        logger.custom(
+          `User has reached maximum number of sessions. Retrying at ${nextHour.toLocaleTimeString()}`
+        );
         await delay(delayMs);
+        return false; 
       } else {
         logger.custom(`--------------------------------`);
         await delay(CONFIG.DELAY);
       }
-      return;
+      return true;
     }
-
-    await handleBattle(account, agent, battle, entryFees);
   }
+  return true;
 }
 
 async function processAccount(account) {
@@ -119,7 +140,7 @@ async function processAccount(account) {
 
     if (!userInfo) {
       logger.error(`No valid data returned for ${account.userId}`);
-      return;
+      return true;
     }
 
     logger.info(`Total Fractals: ${userInfo.userFractals}`);
@@ -131,14 +152,19 @@ async function processAccount(account) {
 
     if (agents && Array.isArray(agents)) {
       for (const agent of agents) {
-        await processAgent(account, agent);
+        const shouldContinue = await processAgent(account, agent);
+        if (!shouldContinue) {
+          return false; 
+        }
       }
     } else {
       logger.error(`No data returned for ${account.userId}`);
     }
   } catch (error) {
     if (error.response && error.response.status === 401) {
-      logger.error(`Auth token expired or invalid for ${account.userId}, refreshing...`);
+      logger.error(
+        `Auth token expired or invalid for ${account.userId}, refreshing...`
+      );
       const authData = await refreshAuthToken(
         account.walletAddress,
         account.privateKey
@@ -147,7 +173,7 @@ async function processAccount(account) {
         account.authToken = authData.accessToken;
         account.userId = authData.user.id;
         logger.info(`Access token regenerated for ${account.userId}`);
-        await processAccount(account);
+        return await processAccount(account);
       } else {
         logger.error(`Failed to refresh auth token for ${account.userId}`);
       }
@@ -155,6 +181,7 @@ async function processAccount(account) {
       logger.error(`Error fetching user info for ${account.userId}:`, error);
     }
   }
+  return true; 
 }
 
 async function main() {
@@ -191,7 +218,10 @@ async function main() {
 
   while (true) {
     for (const account of accounts) {
-      await processAccount(account);
+      const shouldContinue = await processAccount(account);
+      if (!shouldContinue) {
+        return;
+      }
     }
 
     logger.info(
