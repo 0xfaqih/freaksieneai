@@ -105,7 +105,7 @@ async function processAgent(account, agent) {
       console.error(error);
       if (
         error.message.includes(
-          "User has reached maximum number of sessions: \n        6 for the hour,\n        please try after 60 minutes"
+          "User has reached maximum number of sessions"
         )
       ) {
         const now = new Date();
@@ -220,7 +220,7 @@ async function main() {
     for (const account of accounts) {
       const shouldContinue = await processAccount(account);
       if (!shouldContinue) {
-        return;
+        break;
       }
     }
 
