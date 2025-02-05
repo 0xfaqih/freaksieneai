@@ -161,7 +161,7 @@ async function processAccount(account) {
       logger.error(`No data returned for ${account.userId}`);
     }
   } catch (error) {
-    if (error.response && error.response.status === 401) {
+    if (error.message === "Invalid or expired token") {
       logger.error(
         `Auth token expired or invalid for ${account.userId}, refreshing...`
       );
