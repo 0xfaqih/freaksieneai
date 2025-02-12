@@ -3,7 +3,7 @@ import axiosRetry from "axios-retry";
 import logger from "./logger.js";
 import { ethers } from "ethers";
 
-const BASE_URL = "https://dapp-backend-large.fractionai.xyz";
+const BASE_URL = "https://dapp-backend-4x.fractionai.xyz";
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
@@ -13,9 +13,10 @@ const axiosInstance = axios.create({
     "Access-Control-Allow-Origin": "https://dapp.fractionai.xyz",
     "user-agent":
       "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/237.84.2.178 Safari/537.36",
-    Host: "dapp-backend-large.fractionai.xyz",
+    Host: "dapp-backend-4x.fractionai.xyz",
     Origin: "https://dapp.fractionai.xyz",
     Referer: "https://dapp.fractionai.xyz/",
+    "Allowed-State": "na",
   },
 });
 
